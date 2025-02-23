@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -26,9 +27,9 @@ type SystemStats struct {
 func bytesToGB(bytes uint64) float64 {
 	return float64((bytes) / (1024 * 1024 * 1024))
 }
+
 func getSystemStats() SystemStats {
 	cpu, err := cpu.Percent(time.Second, false)
-
 	if err != nil {
 		log.Printf("err  : %s", err.Error())
 	}
@@ -57,20 +58,45 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(stats)
 }
 
+func sendToServer(stats SystemStats) error {
+	jsonData, err := json.Marshal(stats)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Post("http://192.168.100.6:8080/stats/collect",
+		"application/json",
+		bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+
 func main() {
 	// Set up routes
 	http.HandleFunc("/stats", statsHandler)
 
-	// Start monitoring and logging
+	// Start monitoring and sending data
 	go func() {
 		for {
 			stats := getSystemStats()
+			// Kirim data ke server
+			err := sendToServer(stats)
+			if err != nil {
+				log.Printf("Error sending to server: %s", err.Error())
+			}
+
+			// Tampilkan statistik lokal
 			fmt.Printf("\nSystem Statistics:\n")
 			fmt.Printf("CPU Usage: %.2f%%\n", stats.CPU)
 			fmt.Printf("Memory Usage: %.2f%%\n", stats.MemoryPercent)
 			fmt.Printf("Total Memory: %.2f GB\n", stats.TotalMemoryGB)
 			fmt.Printf("Used Memory: %.2f GB\n", stats.UsedMemoryGB)
 			fmt.Printf("Free Memory: %.2f GB\n", stats.FreeMemoryGB)
+
 			time.Sleep(5 * time.Second)
 		}
 	}()
