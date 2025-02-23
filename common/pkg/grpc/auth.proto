@@ -1,0 +1,196 @@
+syntax = "proto3";
+option go_package = "github.com/wafi04/services/auth";
+package pb;
+
+service AuthService {
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
+    rpc Login(LoginRequest) returns (LoginResponse) {}
+    rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
+    rpc Logout(LogoutRequest) returns (LogoutResponse) {}
+    rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {}
+    rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {}
+    rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {}
+    rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {}
+    rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse) {}
+    rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse) {}
+}
+
+message User {
+    string user_id = 1;
+    string username = 2;  // Added username field
+    string name = 3;
+    string email = 4;
+    string password_hash = 5;
+    bool is_active = 6;
+    int64 created_at = 7;
+    int64 updated_at = 8;
+    int64 last_login_at = 9;
+    repeated string active_sessions = 10;
+    string picture = 11;
+}
+
+message UserInfo {
+    string user_id = 1;
+    string username = 2;  // Added username field
+    string name = 3;
+    string email = 4;
+    int64 created_at = 5;
+    int64 updated_at = 6;
+    int64 last_login_at = 7;
+    string picture = 8;
+}
+
+message CreateUserRequest {
+    string username = 1;  // Added username field
+    string name = 2;
+    string email = 3;
+    string password = 4;
+    string picture = 5;
+    string ip_address = 6;
+    string device_info = 7;
+}
+
+message CreateUserResponse {
+    string user_id = 1;
+    string access_token = 2;
+    string username = 3;  // Added username field
+    string name = 4;
+    string email = 5;
+    int64 created_at = 6;
+    string picture = 7;
+    optional Session session_info = 8;
+}
+
+message UpdateUserRequest {
+    string user_id = 1;
+    optional string username = 2;  // Added optional username field
+    optional string name = 3;
+    optional string email = 4;
+    optional string password = 5;
+    optional string picture = 6;
+}
+
+message LoginRequest {
+    string username = 1;  // Changed from name to username
+    string password = 2;
+    string device_info = 3;
+    string ip_address = 4;
+}
+
+// Rest of the messages remain unchanged since they don't need username field
+message ResetPasswordResponse {
+    bool success = 1;
+    string message = 2;
+    int64 updated_at = 3;
+}
+
+message GetUserRequest {
+    string user_id = 1;
+}
+
+message GetUserResponse {
+    optional UserInfo user = 1;
+}
+
+message Session {
+    string session_id = 1;
+    string user_id = 2;
+    string access_token = 3;
+    string refresh_token = 4;
+    string device_info = 5;
+    string ip_address = 6;
+    int64 created_at = 7;
+    int64 expires_at = 8;
+    int64 last_activity_at = 9;
+    bool is_active = 10;
+}
+
+message VerificationToken {
+    string token = 1;
+    string user_id = 2;
+    string type = 3;
+    int64 created_at = 4;
+    int64 expires_at = 5;
+    bool is_used = 6;
+}
+
+message LoginResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+    string user_id = 3;
+    UserInfo user_info = 4;
+    SessionInfo session_info = 5;
+    string session = 6;
+    int64 expires_at = 7;
+}
+
+message SessionInfo {
+    string session_id = 1;
+    string device_info = 2;
+    string ip_address = 3;
+    int64 created_at = 4;
+    int64 last_activity_at = 5;
+}
+
+message LogoutRequest {
+    string access_token = 1;
+    string session_id = 2;
+    string user_id = 3;
+}
+
+message LogoutResponse {
+    bool success = 1;
+}
+
+message ValidateTokenRequest {
+    string access_token = 1;
+}
+
+message ValidateTokenResponse {
+    bool valid = 1;
+    string user_id = 2;
+    string session_id = 3;
+    int64 expires_at = 4;
+}
+
+message RefreshTokenRequest {
+    string refresh_token = 1;
+    string session_id = 2;
+}
+
+message RefreshTokenResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+    int64 expires_at = 3;
+}
+
+message UpdateUserResponse {
+    string user_id = 1;
+    int64 updated_at = 2;
+}
+
+message GetSessionRequest {
+    string session_id = 1;
+}
+
+message GetSessionResponse {
+    SessionInfo session_info = 1;
+    User user_info = 2;
+}
+
+message RevokeSessionRequest {
+    string user_id = 1;
+    string session_id = 2;
+}
+
+message RevokeSessionResponse {
+    bool success = 1;
+}
+
+message ListSessionsRequest {
+    string user_id = 1;
+}
+
+message ListSessionsResponse {
+    repeated SessionInfo sessions = 1;
+}
